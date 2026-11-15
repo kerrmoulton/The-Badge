@@ -2264,7 +2264,7 @@ void port_battery_journal_dump(void)
         }
         if (seg && dt > 0) {
             ESP_LOGI("batt", "── display %s: %ld mV over %ld s -> %.0f mV/h (%d samples)",
-                     mode ? "O" : "X", dt, dv, dv * 3600.0 / dt, seg);
+                     mode ? "O" : "X", dv, dt, dv * 3600.0 / dt, seg);
         } else {
             ESP_LOGI("batt", "── display %s: not enough samples", mode ? "O" : "X");
         }
@@ -2323,8 +2323,8 @@ void port_battery_journal_dump(void)
         int dpct = (int)s_jrn[seg0].pct - (int)s_jrn[s_jrn_n-1].pct;
         if (dsec > 0 && dpct > 0)
             ESP_LOGI("batt", "── last stretch: %d%% in %ld min -> %.1f%%/h, %.1f h for 100%% (from line %u of %u)",
-                     dsec / 60, dpct, dpct * 3600.0 / dsec, dsec * 100.0 / dpct / 3600.0,
-                     s_jrn_n, (unsigned)(seg0 + 1));
+                     dpct, dsec / 60, dpct * 3600.0 / dsec, dsec * 100.0 / dpct / 3600.0,
+                     (unsigned)(seg0 + 1), s_jrn_n);
     }
 }
 
