@@ -51,6 +51,8 @@ void usb_screen_open(void);
 void host_pick_open(void);
 
 void launcher_start(void);
+/* One owner for the USB no-light-sleep lock, called both at boot and on cable changes. */
+void launcher_usb_pm_sync(bool resync_clock_on_connect);
 void launcher_screen_off(void);          /* timed out — touch wakes it  */
 void launcher_screen_off_manual(void);   /* you turned it off — button only */
 void launcher_screen_toggle(void);

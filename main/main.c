@@ -628,7 +628,7 @@ void app_main(void)
 #endif
     /* Booted while plugged in means never sleeping from the start — otherwise
      * the log cuts out for the sixty seconds before the launcher timer runs. */
-    if (port_battery_plugged()) port_pm_hold(true);
+    launcher_usb_pm_sync(false);
 
     badge_creds_init();            /* seed the badge if secrets.h has values */
     port_battery_journal_dump();   /* if last night left a record, it goes here */

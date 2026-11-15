@@ -345,19 +345,25 @@ static void batt_log_cb(lv_timer_t *t)
      * engages the log cuts out entirely and there is no telling whether the
      * device is fine or dead (two verification runs were lost to this).
      * Plugged in, there is no battery to save anyway. */
-    static bool held;
-    bool plugged = port_battery_plugged();
-    if (plugged != held) {
-        port_pm_hold(plugged);
-        /* 🚨 Plugging in is the badge arriving somewhere, and somewhere is
-         * usually where its WiFi is. Housekeeping runs every thirty minutes,
-         * so without this a day out with the clock drifting can go another
-         * half hour after you are home. port_time_autosync() decides for
-         * itself whether it is due, so this costs nothing when it is not. */
-        if (plugged) port_time_autosync();
-        held = plugged;
-    }
+    launcher_usb_pm_sync(true);
     port_uptime_mark();
+}
+
+/* The boot path must hold the CPU awake while USB logging begins, and the
+ * periodic path must release that same hold when the cable is removed.
+ * Previously each path had its own state: boot acquired once, the first timer
+ * acquired again, and unplug released only once. That leaked a no-light-sleep
+ * lock for the entire battery run even with the display off. */
+static bool s_usb_pm_held;
+
+void launcher_usb_pm_sync(bool resync_clock_on_connect)
+{
+    bool plugged = port_battery_plugged();
+    if (plugged == s_usb_pm_held) return;
+    port_pm_hold(plugged);
+    s_usb_pm_held = plugged;
+    /* Plugging in may bring the badge back within range of its time network. */
+    if (plugged && resync_clock_on_connect) port_time_autosync();
 }
 
 static void housekeep_cb(lv_timer_t *t)
