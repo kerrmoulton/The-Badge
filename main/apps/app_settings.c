@@ -75,7 +75,14 @@ void settings_load(void)
     s_sound_on = v.sound_on != 0;
     launcher_set_timeout(v.timeout);
     port_tone_volume(s_sound_on ? s_volume : 0);
-    if (v.xgap >= 0 && v.xgap <= 16) badge_display_set_xgap(v.xgap);
+    /* Upstream's default 8 is the margin for its mirrored 180-degree panel.
+     * Migrate that setting once for the USB-down 0-degree orientation. */
+    if (v.xgap == 8) {
+        badge_display_set_xgap(6);
+        settings_save();
+    } else if (v.xgap >= 0 && v.xgap <= 16) {
+        badge_display_set_xgap(v.xgap);
+    }
 }
 
 /* ── shared pieces ───────────────────────────────────────────── */

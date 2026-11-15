@@ -102,9 +102,9 @@ bool badge_display_start(void)
      * zero and raise it after the first frame — that flash at boot was this. */
     badge_display_brightness(0);
 
-    /* Worn on a strap it is upside down, so the reference orientation is
-     * rotated 180. 🚨 Touch is left alone — this combination is what matches
-     * the hardware. */
+    /* USB-down tabletop orientation. The upstream firmware rotates the panel
+     * 180 degrees for wearing on a strap. Touch is mirrored below to follow
+     * this unrotated panel. */
     badge_display_rotate180();
 
     esp_lv_adapter_display_config_t disp_cfg = {
@@ -155,7 +155,7 @@ bool badge_display_start(void)
     lv_display_add_event_cb(disp, rounder_cb, LV_EVENT_INVALIDATE_AREA, NULL);
 
     bsp_display_cfg_t tcfg = {
-        .touch_flags = { .swap_xy = 0, .mirror_x = 0, .mirror_y = 0 },
+        .touch_flags = { .swap_xy = 0, .mirror_x = 1, .mirror_y = 1 },
     };
     if (bsp_touch_new(&tcfg, &s_touch) != ESP_OK) { ESP_LOGE(TAG, "touch creation failed"); return false; }
     esp_lv_adapter_touch_config_t tch = ESP_LV_ADAPTER_TOUCH_DEFAULT_CONFIG(disp, s_touch);
@@ -183,11 +183,9 @@ lv_indev_t *badge_display_indev(void) { return s_indev; }
  * The controller's column count cannot be known without documentation, so it
  * is selectable in Settings. A coloured band at the edge of the screen means
  * it is wrong. */
-/* Default 8. The CO5300 datasheet gives internal GRAM as 480x480:
- *     6 (left margin) + 466 (panel) + 8 = 480
- * Flipped, the correct margin is 480-1-471 = 8. If it still looks wrong,
- * change it in Settings. */
-static int s_xgap = 8;
+/* In the USB-down, unmirrored orientation the panel uses its 6-pixel left
+ * margin. Settings still permits adjustment if a panel revision needs it. */
+static int s_xgap = 6;
 
 void badge_display_set_xgap(int gap)
 {
@@ -218,9 +216,10 @@ int badge_display_get_xgap(void) { return s_xgap; }
 
 void badge_display_rotate180(void)
 {
-    esp_lcd_panel_mirror(s_panel, true, true);
+    /* Keep the upstream function name to minimize this port's API changes. */
+    esp_lcd_panel_mirror(s_panel, false, false);
     esp_lcd_panel_set_gap(s_panel, s_xgap, 0);
-    ESP_LOGI(TAG, "reference orientation 180 (mirror x+y, x margin %d)", s_xgap);
+    ESP_LOGI(TAG, "USB-down orientation 0 (x margin %d)", s_xgap);
 }
 
 void badge_display_brightness(int percent)
